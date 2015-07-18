@@ -4,18 +4,15 @@ import itertools
 import operator
 
 def problem(word, offensive):
-    char_list = set(offensive)
-    regex_pattern = "[^" + "".join(char_list) + "]+"
-    new_word = []
+    new_word = ""
+    for ch in word:
+        if ch in offensive:
+            new_word += ch
 
-    for ch in list(word):
-        if ch in char_list:
-            new_word.append(ch)
-
-    if "".join(new_word) == offensive:
+    if new_word == offensive:
         return True
-    else:
-        return False
+
+    return False
 
 def create_word_list(length):
     sigma = list('abcdefghijklmnopqrstuvwxyz')
@@ -39,7 +36,6 @@ def find_max_problem_count():
 
     ordered = sorted(counts.items(), key=operator.itemgetter(1))
     return ordered[-10:]
-
 
 tops = find_max_problem_count()
 while bool(tops):
