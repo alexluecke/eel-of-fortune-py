@@ -1,5 +1,7 @@
+import time
 import re
 import itertools
+import operator
 
 def problem(word, offensive):
     char_list = set(offensive)
@@ -15,19 +17,31 @@ def problem(word, offensive):
     else:
         return False
 
-
 def create_word_list(length):
     sigma = list('abcdefghijklmnopqrstuvwxyz')
-    words = [''.join(i) for i in itertools.product(sigma, repeat=length)]
+    return [''.join(i) for i in itertools.product(sigma, repeat=length)]
 
 def find_max_problem_count():
     words = create_word_list(5)
-    counts = []
-    with open('enable.txt') as f:
+    counts = {}
+
+    for word in words:
+        counts[word] = 0
+
+    with open('one-word.txt') as f:
         for line in f:
-            if problem(line, 'snond'):
-                max_count += 1
+            print str(time.ctime())
+            for word in words:
+                if problem(line, word):
+                    counts[word] += 1
+            print str(time.ctime())
 
-    print max_count
 
-find_max_problem_count();
+    ordered = sorted(counts.items(), key=operator.itemgetter(1))
+    return ordered[-10:]
+
+
+tops = find_max_problem_count()
+while bool(tops):
+    print tops.pop()
+
