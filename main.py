@@ -18,9 +18,9 @@ class ThreadedProblem(threading.Thread):
         self.offensives = ow
 
     def run(self):
-        self.problem()
+        self.check_words()
 
-    def problem(self):
+    def check_words(self):
 
         global lock
         global result
@@ -71,16 +71,10 @@ def create_word_list(length):
     sigma = list('abcdefghijklmnopqrstuvwxyz')
     return [''.join(i) for i in itertools.product(sigma, repeat=length)]
 
-def chunk(l, n):
-    n = max(1, n)
-    return [l[i:i + n] for i in range(0, len(l), n)]
-
 def find_max_problem_count():
     offensives = create_word_list(5)
     counts = {}
-    num_procs = 10
-    upper_bound = 0
-    lower_bound = 0
+    num_procs, upper_bound, lower_bound = 10, 0, 0
 
     dict_words = open('enable.txt').read().split()[1489:1490]
 
@@ -98,20 +92,18 @@ def find_max_problem_count():
     for job in jobs:
         job.start()
 
+    # Wait for threads to finish
     while threading.active_count() > 1:
         for job in jobs:
             job.join(1)
 
-    #return sorted(counts.items(), key=operator.itemgetter(1))[-10:]
-
 find_max_problem_count()
+
+# Print results after threads finish:
 lock.acquire()
 try:
     result
+    print("Words with most possible offensive combinations: ")
     print(sorted(result.items(), key=operator.itemgetter(1))[-10:])
 finally:
     lock.release() # release lock, no matter what.
-
-#tops = find_max_problem_count()
-#while bool(tops):
-    #print tops.pop()
