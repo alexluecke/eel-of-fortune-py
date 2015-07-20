@@ -5,39 +5,41 @@ import operator
 
 def problem(word, offensive):
     new_word = ""
+    idx = 0
     for ch in word:
-        if ch in offensive:
+        if ch in offensive[idx:]:
             new_word += ch
-
-    if new_word == offensive:
-        return True
-
-    return False
+    return new_word == offensive
 
 def create_word_list(length):
     sigma = list('abcdefghijklmnopqrstuvwxyz')
     return [''.join(i) for i in itertools.product(sigma, repeat=length)]
 
+def chunk(l, n):
+    n = max(1, n)
+    return [l[i:i + n] for i in range(0, len(l), n)]
+
 def find_max_problem_count():
     words = create_word_list(5)
+    num_procs = 10
     counts = {}
 
     for word in words:
         counts[word] = 0
 
-    with open('one-word.txt') as f:
-        for line in f:
-            print str(time.ctime())
-            for word in words:
-                if problem(line, word):
-                    counts[word] += 1
-            print str(time.ctime())
+    # TODO: Going to break the word list into k parts and pass these parts to
+    # their own thread to try and get some better performance.
+    #chunks = chunk(words, num_procs)
 
+    for line in open('one-word.txt').read().split():
+        print str(time.ctime())
+        for word in words:
+            if problem(line, word):
+                counts[word] += 1
+        print str(time.ctime())
 
-    ordered = sorted(counts.items(), key=operator.itemgetter(1))
-    return ordered[-10:]
+    return sorted(counts.items(), key=operator.itemgetter(1))[-10:]
 
-tops = find_max_problem_count()
-while bool(tops):
-    print tops.pop()
-
+#tops = find_max_problem_count()
+#while bool(tops):
+    #print tops.pop()
