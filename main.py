@@ -9,13 +9,15 @@ result = {}
 lock = threading.Lock()
 
 class ThreadedProblem(threading.Thread):
-    counts = {}
     dictionary = None
     offensives = None
-    def __init__(self, dw, ow):
+    ID = 0
+
+    def __init__(self, ID, dw, ow):
         threading.Thread.__init__(self)
         self.dictionary = dw
         self.offensives = ow
+        self.ID = ID
 
     def run(self):
         self.check_words()
@@ -25,39 +27,36 @@ class ThreadedProblem(threading.Thread):
         global lock
         global result
 
+        this_count = {}
+
         for word in self.offensives:
-            self.counts[word] = 0
+            this_count[word] = 0
 
         start_time = time.time()
         print("Starting[" + self.getName() + "]")
         for line in self.dictionary:
             for word in self.offensives:
                 if problem(line, word):
-                    lock.acquire()
-                    try:
-                        self.counts[word] += 1
-                    finally:
-                        lock.release() # release lock, no matter what.
-
+                    this_count[word] += 1
         end_time = time.time()
-        print("Ending[" + self.getName() + "]: " + self.time_delta(start_time, end_time))
+        print("Ending[" + self.getName() + "]: " + time_delta(start_time, end_time))
 
         lock.acquire()
         try:
-            culled = dict((k,v) for k, v in self.counts.iteritems() if v > 0)
+            culled = dict((k,v) for k, v in this_count.iteritems() if v > 0)
             for (key,value) in culled.iteritems():
                 result[key] = value
         finally:
             lock.release() # release lock, no matter what.
 
-    def time_delta(self, start, end):
-        hours, rem = divmod(end-start, 3600)
-        minutes, seconds = divmod(rem, 60)
-        return "Elapsed: {:0>2}:{:0>2}:{:05.2f}".format(
-            int(hours)
-            , int(minutes)
-            , seconds
-        )
+def time_delta(start, end):
+    hours, rem = divmod(end-start, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return "Elapsed: {:0>2}:{:0>2}:{:05.2f}".format(
+        int(hours)
+        , int(minutes)
+        , seconds
+    )
 
 def problem(word, offensive):
     new_word = ""
@@ -73,10 +72,9 @@ def create_word_list(length):
 
 def find_max_problem_count():
     offensives = create_word_list(5)
-    counts = {}
-    num_procs, upper_bound, lower_bound = 10, 0, 0
+    num_procs, upper_bound, lower_bound = 3, 0, 0
 
-    dict_words = open('enable.txt').read().split()[1489:1490]
+    dict_words = open('enable.txt').read().split()[1487:1490]
 
     jobs = []
     for i in range(num_procs):
@@ -84,9 +82,9 @@ def find_max_problem_count():
         step = len(offensives)/num_procs
         upper_bound = min(len(offensives), i*step + step)
         if i < num_procs-1:
-            jobs.append(ThreadedProblem(dict_words, offensives[lower_bound:upper_bound]))
+            jobs.append(ThreadedProblem(i, dict_words, offensives[lower_bound:upper_bound]))
         else: # Make sure we pass the remaining words to the last process
-            jobs.append(ThreadedProblem(dict_words, offensives[lower_bound:]))
+            jobs.append(ThreadedProblem(i, dict_words, offensives[lower_bound:]))
         lower_bound = upper_bound + 1
 
     for job in jobs:
@@ -97,7 +95,11 @@ def find_max_problem_count():
         for job in jobs:
             job.join(1)
 
+
+start_time = time.time()
 find_max_problem_count()
+end_time = time.time()
+print("Total time: " + time_delta(start_time, end_time))
 
 # Print results after threads finish:
 lock.acquire()
