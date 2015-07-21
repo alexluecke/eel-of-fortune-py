@@ -41,9 +41,10 @@ class ThreadedProblem(threading.Thread):
         end_time = time.time()
         print("Ending[" + self.getName() + "]: " + time_delta(start_time, end_time))
 
+        culled = dict((k,v) for k, v in this_count.iteritems() if v > 0)
+
         lock.acquire()
         try:
-            culled = dict((k,v) for k, v in this_count.iteritems() if v > 0)
             for (key,value) in culled.iteritems():
                 result[key] = value
         finally:
@@ -60,9 +61,8 @@ def time_delta(start, end):
 
 def problem(word, offensive):
     new_word = ""
-    idx = 0
     for ch in word:
-        if ch in offensive[idx:]:
+        if ch in offensive:
             new_word += ch
     return new_word == offensive
 
@@ -72,9 +72,9 @@ def create_word_list(length):
 
 def find_max_problem_count():
     offensives = create_word_list(5)
-    num_procs, upper_bound, lower_bound = 3, 0, 0
+    num_procs, upper_bound, lower_bound = 1, 0, 0
 
-    dict_words = open('enable.txt').read().split()[1487:1490]
+    dict_words = open('enable.txt').read().split()[1485:1490]
 
     jobs = []
     for i in range(num_procs):
